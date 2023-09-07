@@ -3,3 +3,5 @@
 db.sqlite3
 .env
 .coverage
+htmlcov/
+schema.yml
