@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # Internal Packages
     "drfecommerce.product",
+    "mptt",
 ]
 
 MIDDLEWARE = [
