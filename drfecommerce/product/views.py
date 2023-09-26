@@ -1,4 +1,5 @@
 from django.db import connection
+from django.db.models import Prefetch
 from drf_spectacular.utils import extend_schema
 from pygments import highlight
 from pygments.formatters import TerminalFormatter
@@ -38,7 +39,7 @@ class BrandViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
 
-class ProductViewSet(viewsets.ModelViewSet):
+class ProductViewSet(viewsets.ViewSet):
     """
     A simple Viewset for viewing all products
     """
@@ -49,15 +50,18 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def retrieve(self, request, slug=None):
         serializer = ProductSerializer(
-            Product.objects.filter(slug=slug).select_related("category", "brand"),
+            Product.objects.filter(slug=slug)
+            .select_related("category", "brand")
+            .prefetch_related(Prefetch("product_line__product_image")),
             many=True,
         )
         data = Response(serializer.data)
+
         q = list(connection.queries)
         print(len(q))
-        # for qs in q:
-        #     sqlformatted = format(str(qs["sql"]), reindent=True)
-        #     print(highlight(sqlformatted, SqlLexer(), TerminalFormatter()))
+        for qs in q:
+            sqlformatted = format(str(qs["sql"]), reindent=True)
+            print(highlight(sqlformatted, SqlLexer(), TerminalFormatter()))
 
         return data
 
@@ -75,7 +79,6 @@ class ProductViewSet(viewsets.ModelViewSet):
         """
         An endpoint to return products by category
         """
-
         serializer = ProductSerializer(
             self.queryset.filter(category__slug=slug), many=True
         )
