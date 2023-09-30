@@ -46,10 +46,10 @@ class ProductLineFactory(factory.django.DjangoModelFactory):
     is_active = True
 
 
-class ProductImage(factory.django.DjangoModelFactory):
+class ProductImageFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = ProductImage
 
     alternative_text = "test alternative test"
     url = "test.jpg"
-    productline = factory.SubFactory(ProductLine)
+    productline = factory.SubFactory(ProductLineFactory)
