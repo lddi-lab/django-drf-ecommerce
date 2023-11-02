@@ -1,13 +1,13 @@
 from rest_framework import serializers
 
 from .models import (
+    Attribute,
+    AttributeValue,
     Brand,
     Category,
     Product,
     ProductImage,
     ProductLine,
-    Attribute,
-    AttributeValue,
 )
 
 
@@ -69,6 +69,7 @@ class ProductLineSerializer(serializers.ModelSerializer):
         for key in av_data:
             attr_values.update({key["attribute"]["id"]: key["attribute_value"]})
         data.update({"specification": attr_values})
+
         return data
 
 
@@ -101,4 +102,5 @@ class ProductSerializer(serializers.ModelSerializer):
         for key in av_data:
             attr_values.update({key["id"]: key["name"]})
         data.update({"type specification": attr_values})
+
         return data

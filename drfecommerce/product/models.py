@@ -5,7 +5,7 @@ from mptt.models import MPTTModel, TreeForeignKey
 from .fields import OrderField
 
 
-class ActiveOueryset(models.QuerySet):
+class ActiveQueryset(models.QuerySet):
     def isactive(self):
         return self.filter(is_active=True)
 
@@ -15,7 +15,7 @@ class Category(MPTTModel):
     slug = models.SlugField(max_length=255)
     is_active = models.BooleanField(default=False)
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
-    objects = ActiveOueryset.as_manager()
+    objects = ActiveQueryset.as_manager()
 
     class MPTTMeta:
         order_insertion_by = ["name"]
@@ -27,7 +27,7 @@ class Category(MPTTModel):
 class Brand(models.Model):
     name = models.CharField(max_length=100, unique=True)
     is_active = models.BooleanField(default=False)
-    objects = ActiveOueryset.as_manager()
+    objects = ActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
@@ -43,8 +43,10 @@ class Product(models.Model):
         "Category", on_delete=models.SET_NULL, null=True, blank=True
     )
     is_active = models.BooleanField(default=False)
-    product_type = models.ForeignKey("ProductType", on_delete=models.PROTECT)
-    objects = ActiveOueryset.as_manager()
+    product_type = models.ForeignKey(
+        "ProductType", on_delete=models.PROTECT, related_name="product"
+    )
+    objects = ActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
@@ -100,9 +102,9 @@ class ProductLineAttributeValue(models.Model):
             if self.attribute_value.attribute.id in list(iqs):
                 raise ValidationError("Duplicate attribute exists")
 
-        def save(self, *args, **kwargs):
-            self.full_clean()
-            return super(ProductLineAttributeValue, self).save(*args, **kwargs)
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        return super(ProductLineAttributeValue, self).save(*args, **kwargs)
 
 
 class ProductLine(models.Model):
@@ -119,9 +121,9 @@ class ProductLine(models.Model):
         through="ProductLineAttributeValue",
         related_name="product_line_attribute_value",
     )
-    objects = ActiveOueryset.as_manager()
+    objects = ActiveQueryset.as_manager()
 
-    def clean(self, exclude=None):
+    def clean(self):
         qs = ProductLine.objects.filter(product=self.product)
         for obj in qs:
             if self.id != obj.id and self.order == obj.order:
@@ -143,7 +145,7 @@ class ProductImage(models.Model):
     )
     order = OrderField(unique_for_field="productline", blank=True)
 
-    def clean(self, exclude=None):
+    def clean(self):
         qs = ProductImage.objects.filter(productline=self.productline)
         for obj in qs:
             if self.id != obj.id and self.order == obj.order:
@@ -154,7 +156,7 @@ class ProductImage(models.Model):
         return super(ProductImage, self).save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.url)
+        return str(self.order)
 
 
 class ProductType(models.Model):
