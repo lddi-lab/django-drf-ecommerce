@@ -5,29 +5,20 @@ from mptt.models import MPTTModel, TreeForeignKey
 from .fields import OrderField
 
 
-class ActiveQueryset(models.QuerySet):
-    def isactive(self):
+class IsActiveQueryset(models.QuerySet):
+    def is_active(self):
         return self.filter(is_active=True)
 
 
 class Category(MPTTModel):
-    name = models.CharField(max_length=100, unique=True)
-    slug = models.SlugField(max_length=255)
+    name = models.CharField(max_length=235, unique=True)
+    slug = models.SlugField(max_length=255, unique=True)
     is_active = models.BooleanField(default=False)
     parent = TreeForeignKey("self", on_delete=models.PROTECT, null=True, blank=True)
-    objects = ActiveQueryset.as_manager()
+    objects = IsActiveQueryset.as_manager()
 
     class MPTTMeta:
         order_insertion_by = ["name"]
-
-    def __str__(self):
-        return self.name
-
-
-class Brand(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    is_active = models.BooleanField(default=False)
-    objects = ActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
@@ -38,7 +29,6 @@ class Product(models.Model):
     slug = models.SlugField(max_length=255)
     description = models.TextField(blank=True)
     is_digital = models.BooleanField(default=False)
-    brand = models.ForeignKey(Brand, on_delete=models.CASCADE)
     category = TreeForeignKey(
         "Category", on_delete=models.SET_NULL, null=True, blank=True
     )
@@ -46,7 +36,7 @@ class Product(models.Model):
     product_type = models.ForeignKey(
         "ProductType", on_delete=models.PROTECT, related_name="product"
     )
-    objects = ActiveQueryset.as_manager()
+    objects = IsActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
@@ -121,7 +111,7 @@ class ProductLine(models.Model):
         through="ProductLineAttributeValue",
         related_name="product_line_attribute_value",
     )
-    objects = ActiveQueryset.as_manager()
+    objects = IsActiveQueryset.as_manager()
 
     def clean(self):
         qs = ProductLine.objects.filter(product=self.product)
