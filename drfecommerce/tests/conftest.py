@@ -6,15 +6,14 @@ from .factories import (
     # AttributeFactory,
     # AttributeValueFactory,
     CategoryFactory,
-    # ProductFactory,
+    ProductFactory,
     # ProductImageFactory,
     # ProductLineFactory,
     # ProductTypeFactory,
 )
 
 register(CategoryFactory)
-# register(BrandFactory)
-# register(ProductFactory)
+register(ProductFactory)
 # register(ProductLineFactory)
 # register(ProductImageFactory)
 # register(ProductTypeFactory)

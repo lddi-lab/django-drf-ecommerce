@@ -35,11 +35,11 @@ class Product(models.Model):
     #     "ProductType", on_delete=models.PROTECT, related_name="product"
     # )
     is_active = models.BooleanField(default=False)
-    objects = IsActiveQueryset.as_manager()
     created_at = models.DateTimeField(
         auto_now_add=True,
         editable=False,
     )
+    objects = IsActiveQueryset.as_manager()
 
     def __str__(self):
         return self.name
