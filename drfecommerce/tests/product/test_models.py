@@ -67,6 +67,14 @@ class TestProductModel:
         obj = product_factory(name="test_product")
         assert obj.__str__() == "test_product"
 
+    def test_fk_product_type_on_delete_protect(
+        self, product_type_factory, product_line_factory
+    ):
+        obj1 = product_type_factory()
+        product_line_factory(product_type=obj1)
+        with pytest.raises(IntegrityError):
+            obj1.delete()
+
     def test_name_max_length(self, product_factory):
         name = "x" * 236
         obj = product_factory(name=name)
@@ -112,6 +120,14 @@ class TestProductLineModel:
     def test_str_method(self, product_line_factory):
         obj = product_line_factory(sku="12345")
         assert obj.__str__() == "12345"
+
+    def test_fk_product_type_on_delete_protect(
+        self, product_type_factory, product_line_factory
+    ):
+        obj1 = product_type_factory()
+        product_line_factory(product_type=obj1)
+        with pytest.raises(IntegrityError):
+            obj1.delete()
 
     def test_duplicate_order_values(self, product_line_factory, product_factory):
         obj = product_factory()
@@ -175,15 +191,16 @@ class TestProductImageModel:
             product_image_factory(order=1, product_line=obj).clean()
 
 
-# class TestProductTypeModel:
-#     def test_str_method(self, product_type_factory, attribute_factory):
-#         test = attribute_factory(name="test")
-#         obj = product_type_factory.create(name="test_type", attribute=(test,))
+class TestProductTypeModel:
+    def test_str_method(self, product_type_factory):
+        obj = product_type_factory.create(name="test_type")
+        assert obj.__str__() == "test_type"
 
-#         x = ProductTypeAttribute.objects.get(id=1)
-#         print(x)
-
-#         assert obj.__str__() == "test_type"
+    def test_name_field_max_length(self, product_type_factory):
+        name = "x" * 101
+        obj = product_type_factory(name=name)
+        with pytest.raises(ValidationError):
+            obj.full_clean()
 
 
 # class TestAttributeModel:

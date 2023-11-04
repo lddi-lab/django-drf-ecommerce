@@ -9,14 +9,14 @@ from .factories import (
     ProductFactory,
     ProductImageFactory,
     ProductLineFactory,
-    # ProductTypeFactory,
+    ProductTypeFactory,
 )
 
 register(CategoryFactory)
 register(ProductFactory)
 register(ProductLineFactory)
 register(ProductImageFactory)
-# register(ProductTypeFactory)
+register(ProductTypeFactory)
 # register(AttributeValueFactory)
 # register(AttributeFactory)
 
