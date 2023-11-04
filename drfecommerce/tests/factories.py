@@ -50,6 +50,15 @@ class ProductLineFactory(factory.django.DjangoModelFactory):
     #     self.attribute_value.add(*extracted)
 
 
+class ProductImageFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = ProductImage
+
+    alternative_text = "test alternative text"
+    url = "test.jpg"
+    product_line = factory.SubFactory(ProductLineFactory)
+
+
 # class AttributeFactory(factory.django.DjangoModelFactory):
 #     class Meta:
 #         model = Attribute
@@ -77,12 +86,3 @@ class ProductLineFactory(factory.django.DjangoModelFactory):
 
 #     attribute_value = "attr_test"
 #     attribute = factory.SubFactory(AttributeFactory)
-
-
-# class ProductImageFactory(factory.django.DjangoModelFactory):
-#     class Meta:
-#         model = ProductImage
-
-#     alternative_text = "test alternative text"
-#     url = "test.jpg"
-#     productline = factory.SubFactory(ProductLineFactory)
