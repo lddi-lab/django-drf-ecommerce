@@ -8,13 +8,13 @@ from .factories import (
     CategoryFactory,
     ProductFactory,
     # ProductImageFactory,
-    # ProductLineFactory,
+    ProductLineFactory,
     # ProductTypeFactory,
 )
 
 register(CategoryFactory)
 register(ProductFactory)
-# register(ProductLineFactory)
+register(ProductLineFactory)
 # register(ProductImageFactory)
 # register(ProductTypeFactory)
 # register(AttributeValueFactory)
