@@ -1,15 +1,14 @@
 import pytest
 from django.core.exceptions import ValidationError
 from django.db.utils import IntegrityError
-from drfecommerce.product.models import Category, Product, ProductLine
 
-from drfecommerce.product.models import ProductTypeAttribute
+from drfecommerce.product.models import Category, Product, ProductLine
 
 pytestmark = pytest.mark.django_db
 
 
 class TestCategoryModel:
-    def test_str_method(self, category_factory):
+    def test_str_output(self, category_factory):
         obj = category_factory(name="test_cat")
         assert obj.__str__() == "test_cat"
 
@@ -21,7 +20,7 @@ class TestCategoryModel:
 
     def test_slug_max_length(self, category_factory):
         slug = "x" * 256
-        obj = category_factory(name=slug)
+        obj = category_factory(slug=slug)
         with pytest.raises(ValidationError):
             obj.full_clean()
 
@@ -68,10 +67,10 @@ class TestProductModel:
         assert obj.__str__() == "test_product"
 
     def test_fk_product_type_on_delete_protect(
-        self, product_type_factory, product_line_factory
+        self, product_type_factory, product_factory
     ):
         obj1 = product_type_factory()
-        product_line_factory(product_type=obj1)
+        product_factory(product_type=obj1)
         with pytest.raises(IntegrityError):
             obj1.delete()
 
@@ -83,13 +82,13 @@ class TestProductModel:
 
     def test_slug_max_length(self, product_factory):
         slug = "x" * 256
-        obj = product_factory(name=slug)
+        obj = product_factory(slug=slug)
         with pytest.raises(ValidationError):
             obj.full_clean()
 
-    def test_pid_max_length(self, product_factory):
+    def test_pid_length(self, product_factory):
         pid = "x" * 11
-        obj = product_factory(name=pid)
+        obj = product_factory(pid=pid)
         with pytest.raises(ValidationError):
             obj.full_clean()
 
@@ -109,7 +108,7 @@ class TestProductModel:
         qs = Product.objects.is_active().count()
         assert qs == 1
 
-    def test_return_category_active_only_false(self, product_factory):
+    def test_return_product_active_only_false(self, product_factory):
         product_factory(is_active=True)
         product_factory(is_active=False)
         qs = Product.objects.count()
@@ -117,6 +116,23 @@ class TestProductModel:
 
 
 class TestProductLineModel:
+    def test_duplicate_attribute_inserts(
+        self,
+        product_line_factory,
+        attribute_factory,
+        attribute_value_factory,
+        product_line_attribute_value_factory,
+    ):
+        obj1 = attribute_factory(name="shoe-color")
+        obj2 = attribute_value_factory(attribute_value="red", attribute=obj1)
+        obj3 = attribute_value_factory(attribute_value="blue", attribute=obj1)
+        obj4 = product_line_factory()
+        product_line_attribute_value_factory(attribute_value=obj2, product_line=obj4)
+        with pytest.raises(ValidationError):
+            product_line_attribute_value_factory(
+                attribute_value=obj3, product_line=obj4
+            )
+
     def test_str_method(self, product_line_factory):
         obj = product_line_factory(sku="12345")
         assert obj.__str__() == "12345"
@@ -166,7 +182,7 @@ class TestProductLineModel:
         qs = ProductLine.objects.is_active().count()
         assert qs == 1
 
-    def test_return_category_active_only_false(self, product_line_factory):
+    def test_return_product_active_only_false(self, product_line_factory):
         product_line_factory(is_active=True)
         product_line_factory(is_active=False)
         qs = ProductLine.objects.count()
@@ -215,8 +231,14 @@ class TestAttributeModel:
             obj.full_clean()
 
 
-# class TestAttributeValueModel:
-#     def test_str_method(self, attribute_value_factory, attribute_factory):
-#         obj_a = attribute_factory(name="test_attribute")
-#         obj_b = attribute_value_factory(attribute_value="test_value", attribute=obj_a)
-#         assert obj_b.__str__() == "test_attribute-test_value"
+class TestAttributeValueModel:
+    def test_str_method(self, attribute_value_factory, attribute_factory):
+        obj_a = attribute_factory(name="test_attribute")
+        obj_b = attribute_value_factory(attribute_value="test_value", attribute=obj_a)
+        assert obj_b.__str__() == "test_attribute-test_value"
+
+    def test_value_field_max_length(self, attribute_value_factory):
+        attribute_value = "x" * 101
+        obj = attribute_value_factory(attribute_value=attribute_value)
+        with pytest.raises(ValidationError):
+            obj.full_clean()

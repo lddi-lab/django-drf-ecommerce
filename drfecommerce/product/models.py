@@ -24,27 +24,6 @@ class Category(MPTTModel):
         return self.name
 
 
-class Product(models.Model):
-    name = models.CharField(max_length=235)
-    slug = models.SlugField(max_length=255)
-    pid = models.CharField(max_length=10, unique=True)
-    description = models.TextField(blank=True)
-    is_digital = models.BooleanField(default=False)
-    category = TreeForeignKey("Category", on_delete=models.PROTECT)
-    product_type = models.ForeignKey(
-        "ProductType", on_delete=models.PROTECT, related_name="product_type"
-    )
-    is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        editable=False,
-    )
-    objects = IsActiveQueryset.as_manager()
-
-    def __str__(self):
-        return self.name
-
-
 class Attribute(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -61,6 +40,34 @@ class AttributeValue(models.Model):
 
     def __str__(self):
         return f"{self.attribute.name}-{self.attribute_value}"
+
+
+class Product(models.Model):
+    name = models.CharField(max_length=235)
+    slug = models.SlugField(max_length=255)
+    pid = models.CharField(max_length=10, unique=True)
+    description = models.TextField(blank=True)
+    is_digital = models.BooleanField(default=False)
+    category = TreeForeignKey("Category", on_delete=models.PROTECT)
+    product_type = models.ForeignKey(
+        "ProductType", on_delete=models.PROTECT, related_name="product_type"
+    )
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        editable=False,
+    )
+
+    attribute_value = models.ManyToManyField(
+        AttributeValue,
+        through="ProductAttributeValue",
+        related_name="product_attribute_value",
+    )
+
+    objects = IsActiveQueryset.as_manager()
+
+    def __str__(self):
+        return self.name
 
 
 class ProductLineAttributeValue(models.Model):
@@ -110,11 +117,11 @@ class ProductLine(models.Model):
     is_active = models.BooleanField(default=False)
     order = OrderField(unique_for_field="product", blank=True)
     weight = models.FloatField()
-    # attribute_value = models.ManyToManyField(
-    #     AttributeValue,
-    #     through="ProductLineAttributeValue",
-    #     related_name="product_line_attribute_value",
-    # )
+    attribute_value = models.ManyToManyField(
+        AttributeValue,
+        through="ProductLineAttributeValue",
+        related_name="product_line_attribute_value",
+    )
     product_type = models.ForeignKey(
         "ProductType", on_delete=models.PROTECT, related_name="product_line_type"
     )
