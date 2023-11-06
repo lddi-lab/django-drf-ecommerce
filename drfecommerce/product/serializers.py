@@ -66,6 +66,41 @@ class ProductLineSerializer(serializers.ModelSerializer):
         return data
 
 
+class ProductLineCategorySerializer(serializers.ModelSerializer):
+    product_image = ProductImageSerializer(many=True)
+
+    class Meta:
+        model = ProductLine
+        fields = (
+            "price",
+            "product_image",
+        )
+
+
+class ProductCategorySerializer(serializers.ModelSerializer):
+    product_line = ProductLineCategorySerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = (
+            "name",
+            "slug",
+            "pid",
+            "created_at",
+            "product_line",
+        )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        x = data.pop("product_line")
+        price = x[0]["price"]
+        image = x[0]["product_image"]
+        data.update({"price": price})
+        data.update({"image": image})
+
+        return data
+
+
 class ProductSerializer(serializers.ModelSerializer):
     category_name = serializers.CharField(source="category.name")
     product_line = ProductLineSerializer(many=True)

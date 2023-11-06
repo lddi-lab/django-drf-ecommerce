@@ -9,8 +9,12 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from sqlparse import format
 
-from .models import Category, Product
-from .serializers import CategorySerializer, ProductSerializer
+from .models import Category, Product, ProductImage, ProductLine
+from .serializers import (
+    CategorySerializer,
+    ProductSerializer,
+    ProductCategorySerializer,
+)
 
 
 class CategoryViewSet(viewsets.ViewSet):
@@ -67,7 +71,17 @@ class ProductViewSet(viewsets.ViewSet):
         """
         An endpoint to return products by category
         """
-        serializer = ProductSerializer(
-            self.queryset.filter(category__slug=slug), many=True
+        serializer = ProductCategorySerializer(
+            self.queryset.filter(category__slug=slug)
+            .prefetch_related(
+                Prefetch("product_line", queryset=ProductLine.objects.order_by("order"))
+            )
+            .prefetch_related(
+                Prefetch(
+                    "product_line__product_image",
+                    queryset=ProductImage.objects.filter(order=1),
+                )
+            ),
+            many=True,
         )
         return Response(serializer.data)
