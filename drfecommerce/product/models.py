@@ -24,6 +24,32 @@ class Category(MPTTModel):
         return self.name
 
 
+class Product(models.Model):
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(max_length=255)
+    pid = models.CharField(max_length=10, unique=True)
+    description = models.TextField(blank=True)
+    is_digital = models.BooleanField(default=False)
+    category = TreeForeignKey("Category", on_delete=models.PROTECT)
+    product_type = models.ForeignKey(
+        "ProductType", on_delete=models.PROTECT, related_name="product_type"
+    )
+    is_active = models.BooleanField(default=False)
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        editable=False,
+    )
+    attribute_value = models.ManyToManyField(
+        "AttributeValue",
+        through="ProductAttributeValue",
+        related_name="product_attr_value",
+    )
+    objects = IsActiveQueryset.as_manager()
+
+    def __str__(self):
+        return self.name
+
+
 class Attribute(models.Model):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
@@ -42,32 +68,20 @@ class AttributeValue(models.Model):
         return f"{self.attribute.name}-{self.attribute_value}"
 
 
-class Product(models.Model):
-    name = models.CharField(max_length=235)
-    slug = models.SlugField(max_length=255)
-    pid = models.CharField(max_length=10, unique=True)
-    description = models.TextField(blank=True)
-    is_digital = models.BooleanField(default=False)
-    category = TreeForeignKey("Category", on_delete=models.PROTECT)
-    product_type = models.ForeignKey(
-        "ProductType", on_delete=models.PROTECT, related_name="product_type"
-    )
-    is_active = models.BooleanField(default=False)
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        editable=False,
-    )
-
-    attribute_value = models.ManyToManyField(
+class ProductAttributeValue(models.Model):
+    attribute_value = models.ForeignKey(
         AttributeValue,
-        through="ProductAttributeValue",
-        related_name="product_attribute_value",
+        on_delete=models.CASCADE,
+        related_name="product_value_av",
+    )
+    product = models.ForeignKey(
+        "Product",
+        on_delete=models.CASCADE,
+        related_name="producte_value_pl",
     )
 
-    objects = IsActiveQueryset.as_manager()
-
-    def __str__(self):
-        return self.name
+    class Meta:
+        unique_together = ("attribute_value", "product")
 
 
 class ProductLineAttributeValue(models.Model):
@@ -125,7 +139,6 @@ class ProductLine(models.Model):
     product_type = models.ForeignKey(
         "ProductType", on_delete=models.PROTECT, related_name="product_line_type"
     )
-
     created_at = models.DateTimeField(
         auto_now_add=True,
         editable=False,
