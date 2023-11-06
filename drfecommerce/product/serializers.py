@@ -11,17 +11,17 @@ from .models import (
 
 
 class CategorySerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source="name")
+    category = serializers.CharField(source="name")
 
     class Meta:
         model = Category
-        fields = ["category_name", "slug"]
+        fields = ["category", "slug"]
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProductImage
-        exclude = ("id", "productline")
+        exclude = ("id", "product_line")
 
 
 class AttributeSerializer(serializers.ModelSerializer):
@@ -53,6 +53,32 @@ class ProductLineSerializer(serializers.ModelSerializer):
             "stock_qty",
             "order",
             "product_image",
+            "attribute_value",
+        )
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        av_data = data.pop("attribute_value")
+        attr_values = {}
+        for key in av_data:
+            attr_values.update({key["attribute"]["name"]: key["attribute_value"]})
+        data.update({"specification": attr_values})
+
+        return data
+
+
+class ProductSerializer(serializers.ModelSerializer):
+    product_line = ProductLineSerializer(many=True)
+    attribute_value = AttributeValueSerializer(many=True)
+
+    class Meta:
+        model = Product
+        fields = (
+            "name",
+            "slug",
+            "pid",
+            "description",
+            "product_line",
             "attribute_value",
         )
 
@@ -100,31 +126,5 @@ class ProductCategorySerializer(serializers.ModelSerializer):
             image = x[0]["product_image"]
             data.update({"price": price})
             data.update({"image": image})
-
-        return data
-
-
-class ProductSerializer(serializers.ModelSerializer):
-    product_line = ProductLineSerializer(many=True)
-    attribute_value = AttributeValueSerializer(many=True)
-
-    class Meta:
-        model = Product
-        fields = (
-            "name",
-            "slug",
-            "pid",
-            "description",
-            "product_line",
-            "attribute_value",
-        )
-
-    def to_representation(self, instance):
-        data = super().to_representation(instance)
-        av_data = data.pop("attribute_value")
-        attr_values = {}
-        for key in av_data:
-            attr_values.update({key["attribute"]["name"]: key["attribute_value"]})
-        data.update({"attribute": attr_values})
 
         return data

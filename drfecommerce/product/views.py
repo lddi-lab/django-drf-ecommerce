@@ -1,19 +1,14 @@
-from django.db import connection
 from django.db.models import Prefetch
 from drf_spectacular.utils import extend_schema
-from pygments import highlight
-from pygments.formatters import TerminalFormatter
-from pygments.lexers import SqlLexer
 from rest_framework import viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from sqlparse import format
 
 from .models import Category, Product, ProductImage, ProductLine
 from .serializers import (
     CategorySerializer,
-    ProductSerializer,
     ProductCategorySerializer,
+    ProductSerializer,
 )
 
 
@@ -41,20 +36,13 @@ class ProductViewSet(viewsets.ViewSet):
 
     def retrieve(self, request, slug=None):
         serializer = ProductSerializer(
-            self.queryset.filter(slug=slug),
-            # .prefetch_related(Prefetch("attribute_value"))
-            # .prefetch_related(Prefetch("attribute_value__attribute"))
-            # .prefetch_related(Prefetch("product_line__product_image"))
-            # .prefetch_related(Prefetch("product_line__attribute_value__attribute")),
+            self.queryset.filter(slug=slug)
+            .prefetch_related(Prefetch("attribute_value__attribute"))
+            .prefetch_related(Prefetch("product_line__product_image"))
+            .prefetch_related(Prefetch("product_line__attribute_value__attribute")),
             many=True,
         )
         data = Response(serializer.data)
-
-        q = list(connection.queries)
-        print(len(q))
-        # for qs in q:
-        #     sqlformatted = format(str(qs["sql"]), reindent=True)
-        #     print(highlight(sqlformatted, SqlLexer(), TerminalFormatter()))
 
         return data
 
