@@ -43,6 +43,7 @@ class AttributeValueSerializer(serializers.ModelSerializer):
 
 class ProductLineSerializer(serializers.ModelSerializer):
     attribute_value = AttributeValueSerializer(many=True)
+    product_image = ProductImageSerializer(many=True)
 
     class Meta:
         model = ProductLine
@@ -60,8 +61,8 @@ class ProductLineSerializer(serializers.ModelSerializer):
         av_data = data.pop("attribute_value")
         attr_values = {}
         for key in av_data:
-            attr_values.update({key["attribute"]["id"]: key["attribute_value"]})
-        data.update({"specification": attr_values})
+            attr_values.update({key["attribute"]["name"]: key["attribute_value"]})
+        data.update({"attribute": attr_values})
 
         return data
 
@@ -104,31 +105,26 @@ class ProductCategorySerializer(serializers.ModelSerializer):
 
 
 class ProductSerializer(serializers.ModelSerializer):
-    category_name = serializers.CharField(source="category.name")
     product_line = ProductLineSerializer(many=True)
-    attribute = serializers.SerializerMethodField()
+    attribute_value = AttributeValueSerializer(many=True)
 
     class Meta:
         model = Product
         fields = (
             "name",
             "slug",
+            "pid",
             "description",
-            "category_name",
             "product_line",
-            "attribute",
+            "attribute_value",
         )
-
-    def get_attribute(self, obj):
-        attribute = Attribute.objects.filter(product_type_attribute__product__id=obj.id)
-        return AttributeSerializer(attribute, many=True).data
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        av_data = data.pop("attribute")
+        av_data = data.pop("attribute_value")
         attr_values = {}
         for key in av_data:
-            attr_values.update({key["id"]: key["name"]})
-        data.update({"type specification": attr_values})
+            attr_values.update({key["attribute"]["name"]: key["attribute_value"]})
+        data.update({"attribute": attr_values})
 
         return data
